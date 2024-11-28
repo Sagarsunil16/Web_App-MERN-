@@ -11,28 +11,33 @@ const SignIn = () => {
   const handleChange = (e)=>{
     setFormData({...formData,[e.target.id]:e.target.value})
   }
-  const handleSubmit = async(e)=>{
-    e.preventDefault()
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    dispatch(signInStart());
     try {
-      dispatch(signInStart())
-      const res = await fetch('/api/auth/signin',{
-        method:"POST",
-        headers:{
-          'Content-Type':'application/json',
-        },
-        body:JSON.stringify(formData)
-      })
-      const data = await res.json()
-      if(data.success==false){
-        dispatch(signInFailure(data.message))
-        return
+      const res = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+  
+      const data = await res.json();
+      console.log("Response Data:", data); // Debugging
+  
+      if (!data.success) {
+        dispatch(signInFailure(data.message || "Invalid credentials."));
+        return;
       }
-      dispatch(signInSuccess(data))
-      Navigate('/')
+  
+      dispatch(signInSuccess(data.user));
+      Navigate("/");
     } catch (error) {
-      dispatch(signInFailure(error))
+      console.error("Network Error:", error);
+      dispatch(signInFailure("Network error. Please try again."));
     }
-  }
+  };
+  
+  
   return (
     <div className='p-3 max-w-lg mx-auto'>
       <h1 className='text-3xl text-center font-semibold my-7'>Sign In</h1>

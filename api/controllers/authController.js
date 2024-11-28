@@ -2,7 +2,7 @@ import User from "../models/userModel.js"
 import bcryptjs from 'bcryptjs'
 import { errorhandler } from "../utils/error.js"
 import jwt from 'jsonwebtoken'
-import { now } from "mongoose"
+
 const securePaswword = (password)=>{
     return bcryptjs.hashSync(password,10)
 }
@@ -18,26 +18,33 @@ export const signup = async(req,res,next)=>{
     }
 }
 
-export const signin = async(req,res,next)=>{
+export const signin = async (req, res, next) => {
     try {
-        const {email,password} = req.body
-        const validUser = await User.findOne({email:email})
-        if(!validUser){
-            return  next(errorhandler(404,"User not found"))
-        }
-        const validPassword = bcryptjs.compareSync(password,validUser.password)
-        if(!validPassword){
-            return next(errorhandler(401,"Wrong Credentials"))
-        }
-        const token = jwt.sign({id:validUser._id},process.env.JWT_SECRET)
-        const{password:hashedPassword,...rest} = validUser._doc
-
-        const expiryDate = new Date(Date.now()+3600000) //for 1-hour
-        res.cookie('access_token',token,{httpOnly:true,expires:expiryDate,}).status(200).json(rest)
+      const { email, password } = req.body;
+      const validUser = await User.findOne({ email });
+      if (!validUser) {
+        return res.status(404).json({ success: false, message: "User not found" });
+      }
+  
+      const validPassword = bcryptjs.compareSync(password, validUser.password);
+      if (!validPassword) {
+        return res.status(401).json({ success: false, message: "Wrong Credentials" });
+      }
+  
+      const token = jwt.sign({ id: validUser._id }, process.env.JWT_SECRET);
+      const { password: hashedPassword, ...rest } = validUser._doc;
+  
+      const expiryDate = new Date(Date.now() + 3600000); // 1-hour expiration
+  
+      res
+        .cookie("access_token", token, { httpOnly: true, expires: expiryDate })
+        .status(200)
+        .json({ success: true, user: rest, token });
     } catch (error) {
-        next(error)
+      res.status(500).json({ success: false, message: "Internal Server Error", error });
     }
-}
+  };
+  
 
 export const google = async(req,res,next)=>{
     try {
