@@ -1,12 +1,24 @@
+import { useSelector } from 'react-redux';
+import { Outlet, Navigate } from 'react-router-dom';
 
-import { useSelector } from 'react-redux'
-import { Outlet,Navigate } from 'react-router-dom'
-const PrivateRoute = () => {
-    const token =document.cookie.split(';').find(cookie=>cookie.trim().startsWith('access_token='))
-    const {currentUser} = useSelector((state)=>state.user)
-    console.log(currentUser,"1")
-  return currentUser?<Outlet/>:<Navigate to='/signin'/>
-  
-}
+const PrivateRoute = ({ adminOnly, children }) => {
+  const { currentUser } = useSelector((state) => state.user);
 
-export default PrivateRoute
+  // If user is not logged in, redirect to SignIn
+  if (!currentUser) {
+    return <Navigate to="/signin" replace />;
+  }
+
+  // Admin-only route check
+  if (adminOnly && !currentUser.is_Admin) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (adminOnly && !currentUser.is_Admin) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children ? children : <Outlet />;
+};
+
+export default PrivateRoute;
